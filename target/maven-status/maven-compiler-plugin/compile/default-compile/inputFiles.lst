@@ -1,0 +1,6 @@
+/Users/carolpinto/rating-backend/src/main/java/com/example/ratingbackend/BackendServer.java
+/Users/carolpinto/rating-backend/src/main/java/com/example/ratingbackend/db/DatabaseManager.java
+/Users/carolpinto/rating-backend/src/main/java/com/example/ratingbackend/model/Account.java
+/Users/carolpinto/rating-backend/src/main/java/com/example/ratingbackend/model/BlockchainBlock.java
+/Users/carolpinto/rating-backend/src/main/java/com/example/ratingbackend/model/RatingRecord.java
+/Users/carolpinto/rating-backend/src/main/java/com/example/ratingbackend/service/RatingBackend.java

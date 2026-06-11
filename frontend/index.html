@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rating Backend</title>
+    <style>
+        body { font-family: Arial, sans-serif; background:#f4f6fb; color:#1f2937; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0; }
+        .container { width:100%; max-width:480px; background:white; border-radius:16px; padding:28px; box-shadow:0 20px 50px rgba(15,23,42,0.12); }
+        h1 { margin-top:0; font-size:1.8rem; }
+        label { display:block; margin-top:16px; font-weight:600; }
+        input, select, textarea { width:100%; padding:12px 14px; margin-top:6px; border:1px solid #d1d5db; border-radius:10px; font-size:1rem; }
+        textarea { min-height:100px; resize:vertical; }
+        .stars { display:flex; gap:4px; margin-top:10px; }
+        .star { width:40px; height:40px; cursor:pointer; border:none; background:none; font-size:1.8rem; color:#cbd5e1; }
+        .star.selected, .star:hover, .star:hover ~ .star { color:#f59e0b; }
+        button { margin-top:22px; width:100%; background:#2563eb; color:white; border:none; padding:14px; border-radius:12px; font-size:1rem; cursor:pointer; }
+        button:hover { background:#1d4ed8; }
+        .message { margin-top:18px; padding:14px; border-radius:12px; background:#eef2ff; color:#1e3a8a; }
+        .message.warning { background:#fef3c7; color:#92400e; border-left:4px solid #f59e0b; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Account Rating</h1>
+    <label for="userId">Enter your userID</label>
+    <input id="userId" placeholder="user123" />
+
+    <label for="modelSelect">Select model</label>
+    <select id="modelSelect"></select>
+
+    <label for="review">Reviews</label>
+    <textarea id="review" placeholder="Optional review text"></textarea>
+
+    <label>Rating (5 stars only)</label>
+    <div class="stars" id="starContainer"></div>
+
+    <button id="submitButton">Submit rating</button>
+    <div id="message" class="message" style="display:none"></div>
+</div>
+
+<script>
+    const modelSelect = document.getElementById('modelSelect');
+    const starContainer = document.getElementById('starContainer');
+    const messageBox = document.getElementById('message');
+    let selectedRating = 0;
+
+    async function loadModels() {
+        try {
+            const response = await fetch('/api/models');
+            if (!response.ok) {
+                throw new Error('Unable to load models');
+            }
+            const models = await response.json();
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+        } catch (error) {
+            const fallbackModels = ["Model A", "Model B", "Model C", "Model D"];
+            fallbackModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+        }
+    }
+
+    loadModels();
+
+    for (let i = 1; i <= 5; i++) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'star';
+        button.textContent = '★';
+        button.dataset.value = i;
+        button.addEventListener('click', () => {
+            selectedRating = i;
+            updateStars();
+        });
+        starContainer.appendChild(button);
+    }
+
+    function updateStars() {
+        Array.from(starContainer.children).forEach(button => {
+            button.classList.toggle('selected', Number(button.dataset.value) <= selectedRating);
+        });
+    }
+
+    document.getElementById('submitButton').addEventListener('click', async () => {
+        const userId = document.getElementById('userId').value.trim();
+        const model = modelSelect.value;
+        const review = document.getElementById('review').value.trim();
+
+        if (!userId) {
+            showMessage('Please enter a userID.');
+            return;
+        }
+        if (selectedRating < 1) {
+            showMessage('Please choose a rating from 1 to 5 stars.');
+            return;
+        }
+
+        const payload = { userId, model, review, rating: selectedRating };
+
+        try {
+            const response = await fetch('/api/rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.status === 'warning') {
+                showMessage('⚠️ ' + result.message + ' This is allowed for other models. (' + result.reviewCount + ' reviews of ' + result.model + ' from this device)');
+            } else if (response.ok) {
+                showMessage(`✓ Rating submitted: ${result.message}`);
+            } else {
+                showMessage(result.message || 'Failed to submit rating');
+            }
+        } catch (error) {
+            showMessage('Unable to connect to the backend server. Start the Java backend and reload this page.');
+        }
+    });
+
+    function showMessage(text) {
+        messageBox.textContent = text;
+        messageBox.style.display = 'block';
+        if (text.includes('⚠️')) {
+            messageBox.classList.add('warning');
+        } else {
+            messageBox.classList.remove('warning');
+        }
+    }
+</script>
+</body>
+</html>

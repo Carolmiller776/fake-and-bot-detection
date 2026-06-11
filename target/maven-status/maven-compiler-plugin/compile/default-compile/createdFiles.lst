@@ -1,0 +1,6 @@
+com/example/ratingbackend/model/RatingRecord.class
+com/example/ratingbackend/service/RatingBackend.class
+com/example/ratingbackend/model/Account.class
+com/example/ratingbackend/BackendServer.class
+com/example/ratingbackend/model/BlockchainBlock.class
+com/example/ratingbackend/db/DatabaseManager.class
